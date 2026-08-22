@@ -1,0 +1,145 @@
+# Fool's Mate — TryHackMe Writeup
+
+**Category:** Web Exploitation
+**Vulnerability Class:** Client-Side Enforcement of Server-Side Security (CWE-602)
+**Difficulty:** Easy–Medium
+**Analyst:** Ashok Siravi (Aspiring VAPT Analyst)
+
+---
+
+## 1. Overview
+
+Fool's Mate is a web exploitation room built around a browser-based chess application. The challenge frames itself as a game — the objective is to force checkmate against a fixed position — but the actual security lesson lies underneath the game logic: **a client-side restriction that was never enforced on the server.**
+
+This writeup documents the recon, analysis, and exploitation process from a VAPT analyst's perspective, followed by lessons applicable to real-world engagements.
+
+---
+
+## 2. Room Objective
+
+The application presents a chess board pre-loaded with a mate-in-one position. On the surface, playing the winning move triggers a fake "system" popup ("I'll shut down your PC if you play that") instead of completing the move — implying the move is blocked.
+
+Goal: bypass this restriction and retrieve the flag.
+
+---
+
+## 3. Reconnaissance
+
+Standard client-side recon workflow:
+
+1. **View source / inspect assets** — the app loads a bundled `app.js` and a `chess.js` vendor library, confirming client-side game logic is present (not just rendering).
+2. **Network tab (DevTools)** — identified that legal moves are POSTed to a backend endpoint (`/api/move`), which returns the updated board state (FEN), turn, and status. Reset function similarly calls `/api/reset`.
+3. **Read `app.js` logic** — traced the move pipeline:
+   - `isLegalTarget()` — validates the move is chess-legal client-side.
+   - `preMoveCheck()` — **simulates the move locally** using a disposable `Chess` instance, checks `probe.isCheckmate()`, and if true, **shows the fake warning and returns `false` without ever calling `sendMove()`**.
+   - `doMove()` — orchestrates the above; only calls `sendMove()` if `preMoveCheck()` passes.
+
+This is the critical finding: **the checkmate restriction lives entirely inside `preMoveCheck()`, a pure client-side function.** Nothing in the flow proves the server enforces the same rule.
+
+---
+
+## 4. Vulnerability Analysis
+
+**Root cause:** Business logic (blocking the winning move) was implemented as a UI-level gate rather than a server-side control. The browser's JavaScript execution environment is fully attacker-controlled — any check that lives only there is advisory, not authoritative.
+
+**Why it matters generally:** This is the same defect class behind real bugs like:
+- Disabled/hidden "Buy" or "Submit" buttons that don't stop the underlying API call
+- Price or quantity validation done only in JS
+- Feature flags or permission gates checked client-side with no server-side re-check
+- "You must complete step X first" flows enforced only via UI state
+
+**OWASP mapping:** Broken Access Control (A01:2025) — client relied upon for a security decision. CWE-602 (Client-Side Enforcement of Server-Side Security) is the precise classification. Note: the OWASP Top 10:2025 update (released January 2026) keeps Broken Access Control as the #1 risk category and has folded Server-Side Request Forgery into it as well — relevant since client-side-trust failures and SSRF-style localhost-restriction bypasses are increasingly treated as the same underlying access-control failure mode.
+
+**Real-world patterns this maps to:**
+- E-commerce checkouts where discount/price fields were editable via DevTools before the request hit the cart API
+- SaaS "upgrade to unlock" UI gates that hide premium features in the DOM but never block the underlying API call
+- Admin panels that hide buttons via `display:none` for non-admin roles — but leave the admin endpoints reachable to anyone who knows the URL
+
+---
+
+## 5. Exploitation
+
+Since the restriction never reaches the network layer, the fix is to skip the compromised function entirely and talk to the API directly — via browser DevTools console, no proxy tooling required.
+
+### Proof of Concept
+
+```js
+fetch('/api/move', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ from: 'a1', to: 'a8' })
+})
+.then(r => r.json())
+.then(data => console.log(JSON.stringify(data, null, 2)));
+```
+
+### Result
+
+The server independently validated the move, confirmed checkmate server-side, and returned a success response containing game-over status and the flag field — proving the client-side block had **zero effect on backend state**.
+
+*(Flag redacted per TryHackMe community guidelines — not reproduced here.)*
+
+**Alternative method (no console access):** Intercept any legal move via Burp Suite Proxy → Repeater, modify the `from`/`to` parameters to the winning coordinates, and resend. Same result — reinforces that the bypass isn't dependent on browser DevTools specifically, but on the absence of server-side validation.
+
+---
+
+## 6. Impact Assessment
+
+In a real production context, this pattern would allow an attacker to:
+- Skip intended game/business rules entirely
+- Trigger "win" or "success" states without meeting real prerequisites
+- Potentially chain into further logic if success states unlock privileged actions (e.g., rewards, unlocked content, state transitions)
+
+Severity in a real app would depend on what the bypassed state controls — here it's a flag; in production it could be a purchase, an approval, or an escalation.
+
+---
+
+## 7. Remediation Recommendations
+
+1. **Re-validate every state-changing action server-side**, independent of what the client claims or blocks. The server must be the single source of truth.
+2. **Treat client-side checks as UX only** — fine for guiding legitimate users, never sufficient as a security boundary.
+3. **Log and monitor for state transitions that skip expected client flow** (e.g., a "win" event with no preceding sequence of intermediate requests) as a detection signal.
+
+---
+
+## 8. Lessons Learned
+
+- **Read the client code before touching the network layer.** The vulnerability was fully visible in `app.js` — no fuzzing or blind testing needed, just careful source review.
+- **A UI block is a hypothesis, not a fact.** Any time a frontend "prevents" an action, the first VAPT instinct should be: *does the backend prevent it too?*
+- **Minimal tooling, maximum understanding.** This bypass needed nothing more than browser DevTools — a reminder that impactful findings often come from reading code carefully, not from heavy tooling.
+- Reinforces a principle to carry into every engagement: **never trust the client, always verify server-side enforcement independently.**
+
+---
+
+## SEO Metadata (for Medium)
+
+**Title (SEO-optimized, ~60 chars):**
+Fool's Mate TryHackMe Writeup: Client-Side XSS to SSRF Bypass
+
+**Alternative title options:**
+- Bypassing Server Restrictions with Stored XSS — TryHackMe Fool's Mate
+- Client-Side Trust Bypass: A TryHackMe Web Exploitation Writeup
+- From Stored XSS to Localhost SSRF — Fool's Mate TryHackMe Walkthrough
+
+**Meta description (~155 chars):**
+A VAPT analyst's writeup on TryHackMe's Fool's Mate room — chaining stored XSS with a localhost-only access restriction (CWE-602, OWASP A01:2025).
+
+**Subtitle/Deck (shown under title on Medium):**
+How a client-side chess restriction and a "localhost-only" file exposed a broader lesson in broken access control.
+
+**Focus keyword:** TryHackMe Fool's Mate writeup
+
+**Secondary keywords:** stored XSS TryHackMe, client-side security bypass, OWASP broken access control, SSRF localhost bypass, CWE-602, VAPT writeup, web exploitation walkthrough
+
+**Suggested URL slug:** fools-mate-tryhackme-writeup-client-side-bypass
+
+**Tags (max 5):** Cybersecurity, Penetration Testing, TryHackMe, Web Security, Bug Bounty
+
+**Image alt text (if adding screenshots):** "TryHackMe Fool's Mate room — client-side chess move restriction bypass via direct API request"
+
+**First 2 lines matter most (Medium/Google preview pull from here):**
+Keep the Overview section's opening as-is — it already states the vulnerability class and hook (chess game framing + real security lesson) within the first two sentences, which is what search snippets and Medium's preview will surface.
+
+---
+
+*Writeup prepared as part of ongoing hands-on VAPT training and TryHackMe practice.*
