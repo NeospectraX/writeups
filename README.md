@@ -2,10 +2,13 @@
 
 # 🚩 Writeups
 
-**CTF & vulnerable-machine writeups** — recon, exploitation, and privilege-escalation methodology.
+**CTF & vulnerable-machine writeups** — recon, exploitation, and privilege-escalation methodology (TryHackMe, HackTheBox, PortSwigger, RootMe, OverTheWire, and other platforms).
 
 ![TryHackMe](https://img.shields.io/badge/TryHackMe-212C42?style=for-the-badge&logo=tryhackme&logoColor=red)
 ![HackTheBox](https://img.shields.io/badge/HackTheBox-9FEF00?style=for-the-badge&logo=hackthebox&logoColor=black)
+![PortSwigger](https://img.shields.io/badge/PortSwigger-FF6633?style=for-the-badge&logo=portswigger&logoColor=white)
+![RootMe](https://img.shields.io/badge/RootMe-000000?style=for-the-badge&logo=rootme&logoColor=white)
+![OverTheWire](https://img.shields.io/badge/OverTheWire-1D1D1D?style=for-the-badge&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
