@@ -23,6 +23,7 @@
 | 1 | [🏴 Bounty Hacker](./bounty-hacker-writeup-github.md) | ![THM](https://img.shields.io/badge/THM-red?style=flat-square) | 🟢 Easy | Anonymous FTP → Credential Harvesting → SSH (Hydra Bruteforce) → Privesc via `sudo tar` ([GTFOBins](https://gtfobins.github.io/gtfobins/tar/)) |
 | 2 | [🏴 RootMe](./rootme-writeup.md) | ![THM](https://img.shields.io/badge/THM-red?style=flat-square) | 🟢 Easy | Directory Enum → File Upload Filter Bypass (`.phtml`) → PHP Reverse Shell → Shell Stabilization → Root |
 | 3 | [🏴 Fool's Mate](<./# Fool's Mate TryHackMe Writeup>) | ![THM](https://img.shields.io/badge/THM-red?style=flat-square) | 🟡 Easy–Medium | Client-Side Logic Analysis → Broken Access Control (CWE-602) → Direct API Bypass |
+| 4 | [🏴 U.A. High School](./ua-high-school-writeup.md) | ![THM](https://img.shields.io/badge/THM-red?style=flat-square) | 🟢 Easy | Unauthenticated Command Injection (`index.php?cmd=`) → Steganography (Corrupted JPEG Header + `steghide`) → Lateral Move → Sudo Filter Bypass (Blacklist→Exact-Match, `eval`) → Root |
 
 *New writeups are appended to this table as they're completed.*
 
@@ -43,9 +44,9 @@ Every writeup follows a consistent structure:
 
 ## 📊 Stats
 
-![Total Writeups](https://img.shields.io/badge/Writeups-3-blue?style=flat-square)
+![Total Writeups](https://img.shields.io/badge/Writeups-4-blue?style=flat-square)
 ![Platforms](https://img.shields.io/badge/Platforms-1-orange?style=flat-square)
-![Easy](https://img.shields.io/badge/Easy-2-brightgreen?style=flat-square)
+![Easy](https://img.shields.io/badge/Easy-3-brightgreen?style=flat-square)
 ![Easy--Medium](https://img.shields.io/badge/Easy--Medium-1-yellow?style=flat-square)
 
 ---
