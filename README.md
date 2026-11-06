@@ -24,6 +24,11 @@
 | 2 | [🏴 RootMe](./rootme-writeup.md) | ![THM](https://img.shields.io/badge/THM-red?style=flat-square) | 🟢 Easy | Directory Enum → File Upload Filter Bypass (`.phtml`) → PHP Reverse Shell → Shell Stabilization → Root |
 | 3 | [🏴 Fool's Mate](<./# Fool's Mate TryHackMe Writeup>) | ![THM](https://img.shields.io/badge/THM-red?style=flat-square) | 🟡 Easy–Medium | Client-Side Logic Analysis → Broken Access Control (CWE-602) → Direct API Bypass |
 | 4 | [🏴 U.A. High School](./ua-high-school-writeup.md) | ![THM](https://img.shields.io/badge/THM-red?style=flat-square) | 🟢 Easy | Unauthenticated Command Injection (`index.php?cmd=`) → Steganography (Corrupted JPEG Header + `steghide`) → Lateral Move → Sudo Filter Bypass (Blacklist→Exact-Match, `eval`) → Root |
+| 5 | [🏴 Crawl4AI — Hooks RCE](./portswigger-vapt-reports/VAPT_Report_Crawl4AI_RCE.pdf) | ![PortSwigger](https://img.shields.io/badge/PortSwigger-FF6633?style=flat-square) | 🔴 Critical | API Recon (`/openapi.json`) → Python `exec()` Hook Injection → RCE as root → Flag Exfiltration |
+| 6 | [🏴 SecureCorp Data Vault — SSI Injection](./portswigger-vapt-reports/VAPT_Report_SecureCorpDataVault_SSI.pdf) | ![PortSwigger](https://img.shields.io/badge/PortSwigger-FF6633?style=flat-square) | 🔴 Critical | Stored Note → `.shtml` SSI Processing → `#exec` Directive Injection → RCE |
+| 7 | [🏴 SecurePortal — Werkzeug Debug RCE](./portswigger-vapt-reports/VAPT_Report_SecurePortal_WerkzeugRCE.pdf) | ![PortSwigger](https://img.shields.io/badge/PortSwigger-FF6633?style=flat-square) | 🔴 Critical | Base64 PIN Disclosure → Forced Debug-Console Crash → Werkzeug PIN Auth → `os.popen()` RCE |
+| 8 | [🏴 VM2 Sandbox Escape (CVE-2023-32314)](./portswigger-vapt-reports/VAPT_Report_VM2_Sandbox_Escape.pdf) | ![PortSwigger](https://img.shields.io/badge/PortSwigger-FF6633?style=flat-square) | 🔴 Critical | `Error.stack` Proxy Trap (Host-Realm) → `vm2` Sandbox Escape → Host RCE |
+| 9 | [🏴 File Path Traversal — 5 Bypass Variants](./portswigger-vapt-reports/VAPT_Report_PathTraversal_MultiVariant.pdf) | ![PortSwigger](https://img.shields.io/badge/PortSwigger-FF6633?style=flat-square) | 🟠 High | Non-Recursive Filter Bypass → Zero-Sanitization → Double URL-Encoding → Start-of-Path Validation Bypass → Null-Byte Extension Bypass |
 
 *New writeups are appended to this table as they're completed.*
 
@@ -42,12 +47,20 @@ Every writeup follows a consistent structure:
 
 ---
 
+## 📁 PortSwigger VAPT Engagement Reports
+
+The [`portswigger-vapt-reports/`](./portswigger-vapt-reports/) folder holds full, professional-format VAPT engagement reports (PDF) for individual PortSwigger Web Security Academy labs — each role-played as a real client engagement with Document Control, Scope, Methodology (PTES), CVSS 3.1 scoring, reproducible PoC steps with real Burp Suite evidence, a Remediation Roadmap, and appendices. These sit alongside the shorter CTF-style writeups above as a separate, deeper deliverable format.
+
+---
+
 ## 📊 Stats
 
-![Total Writeups](https://img.shields.io/badge/Writeups-4-blue?style=flat-square)
-![Platforms](https://img.shields.io/badge/Platforms-1-orange?style=flat-square)
+![Total Writeups](https://img.shields.io/badge/Writeups-9-blue?style=flat-square)
+![Platforms](https://img.shields.io/badge/Platforms-2-orange?style=flat-square)
 ![Easy](https://img.shields.io/badge/Easy-3-brightgreen?style=flat-square)
 ![Easy--Medium](https://img.shields.io/badge/Easy--Medium-1-yellow?style=flat-square)
+![High](https://img.shields.io/badge/High-1-orange?style=flat-square)
+![Critical](https://img.shields.io/badge/Critical-4-red?style=flat-square)
 
 ---
 
